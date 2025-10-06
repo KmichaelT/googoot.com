@@ -1,0 +1,177 @@
+{
+  "Mockup1": {
+    "subject": "Baseball cap",
+    "color": "warm yellow",
+    "structure": {
+      "panels": 6,
+      "material": ["cotton twill", "canvas"],
+      "stitching": {
+        "crown": "visible seams",
+        "brim": "curved with subtle horizontal stitch lines"
+      }
+    },
+    "logo": {
+      "source": "provided",
+      "placement": "front center panel",
+      "application": "embroidered",
+      "thread_color": "white",
+      "requirements": "maintain proportions and clarity"
+    },
+    "environment": {
+      "surface": "dark gray asphalt with visible texture and small aggregate stones",
+      "shadows": "dramatic under the hat"
+    },
+    "camera": {
+      "angle": "very low, near ground level",
+      "framing": "hat prominent in frame"
+    },
+    "lighting": {
+      "type": "natural daylight",
+      "contrast": "high contrast between hat and pavement"
+    },
+    "style": ["professional photography", "minimalist urban", "sharp focus"],
+    "aesthetic_notes": "Background can remain monochrome with deep blacks and grays while the hat stays warm yellow.",
+    "notes": "Original text mentioned a black hat and monochrome look. Use warm yellow hat; keep background monochrome for contrast."
+  },
+  "Mockup2": {
+    "subject": "Premium aluminum water bottle",
+    "bottle": {
+      "capacity_oz": "20–24",
+      "shape": "cylindrical",
+      "finish": "smooth matte powder coat",
+      "color": "warm yellow"
+    },
+    "logo": {
+      "source": "provided",
+      "placement": "centered vertically and horizontally on visible side",
+      "application": "screen-printed or laser-etched",
+      "ink_color": "matte black",
+      "requirements": "EXACT reproduction of original design, proportions, typography, and details"
+    },
+    "hardware": {
+      "lid": "black plastic or rubber cap with integrated carry loop",
+      "carabiner": "silver metal attached to loop"
+    },
+    "pose": {
+      "orientation": "positioned at 45-degree angle",
+      "support": "leaning naturally between rocks"
+    },
+    "environment": {
+      "rocks": {
+        "type": "black volcanic or basalt",
+        "features": ["rough weathered texture", "stratification", "cracks", "mineral veining"],
+        "placement": {
+          "foreground_left": "large jagged rock framing bottle",
+          "background_right": "large jagged rock framing bottle"
+        }
+      }
+    },
+    "camera": {
+      "perspective": "eye level with slight upward angle",
+      "focal_length_equiv_mm": "50–85",
+      "frame_occupancy": "bottle ~40% of frame",
+      "aperture": "f/5.6",
+      "depth_of_field": "shallow, bottle and immediate rocks sharp"
+    },
+    "lighting": {
+      "source": "soft diffused daylight from upper left",
+      "illumination": "even on bottle and logo",
+      "shadows": "subtle rock shadows on bottle",
+      "rim_light": "gentle on rock edges",
+      "logo_reflections": "logo appears matte without reflections"
+    },
+    "background": {
+      "type": "clean minimalist",
+      "appearance": "smooth gradient from light blue-gray to darker gray",
+      "vignetting": "slight at corners"
+    },
+    "post_processing": {
+      "contrast": "high contrast between black rocks and warm yellow bottle",
+      "edges": "logo edges crisp and clean",
+      "overall_style": "commercial product photography"
+    },
+    "critical_instruction": "Use the provided logo exactly as given, applied in matte black on the warm yellow bottle surface.",
+    "notes": "Original text mentioned an orange bottle in one line. Use warm yellow consistently."
+  },
+  "Mockup3": {
+    "subject": "Hand holding premium business card",
+    "hand": {
+      "skin_tone": "fair",
+      "entry": "from left side of frame",
+      "hold": "card between thumb and middle finger",
+      "detail": "natural skin textures visible"
+    },
+    "card": {
+      "stock": "white matte",
+      "corners": "rounded",
+      "logo": {
+        "treatment": "debossed",
+        "requirements": "adhere strictly to original design"
+      }
+    },
+    "camera": {
+      "position": "straight-on",
+      "lens_mm": 85,
+      "aperture": "f/2.8",
+      "focus": "sharp on hand and card"
+    },
+    "lighting": {
+      "type": "soft directional studio light from upper right",
+      "shadows": "gentle, emphasizing edges"
+    },
+    "background": {
+      "color": "pure warm yellow"
+    },
+    "composition": "minimalist, high-resolution product shot",
+    "post_processing": "professional, high contrast",
+    "aspect_ratio": "4:5"
+  },
+  "Mockup4": {
+    "subject": "Black iPhone on circular wireless charging pad",
+    "device": {
+      "model_style": "modern iPhone with rounded corners and black frame",
+      "screen": {
+        "wallpaper": "soft gray gradient from near-white at top to deeper gray at bottom",
+        "dock": {
+          "style": "translucent gray bar",
+          "icons": [
+            {
+              "name": "Custom app",
+              "source": "provided logo/image",
+              "appearance": "white glyph on warm yellow rounded-square iOS icon"
+            },
+            {
+              "name": "Reminders",
+              "appearance": "white notepad with three colored dots (blue, red, orange)"
+            },
+            {
+              "name": "Mail",
+              "appearance": "blue background with white envelope"
+            },
+            {
+              "name": "Messages",
+              "appearance": "green background with white speech bubble"
+            }
+          ]
+        }
+      }
+    },
+    "charger": {
+      "type": "wireless",
+      "shape": "circular",
+      "color": "white or light gray",
+      "finish": "clean edges, minimalist"
+    },
+    "pose": {
+      "phone_angle": "slight angle to reveal screen and pad"
+    },
+    "environment": {
+      "background": "neutral light gray",
+      "shadows": "subtle beneath charging pad"
+    },
+    "lighting": {
+      "type": "soft diffused"
+    },
+    "aesthetic": "clean minimalist tech product photography"
+  }
+}
