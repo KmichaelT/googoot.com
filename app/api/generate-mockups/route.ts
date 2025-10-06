@@ -34,8 +34,19 @@ export async function POST(request: NextRequest) {
     const geminiService = createGeminiService();
 
     if (!geminiService) {
+      // Add debugging info for Vercel
+      const hasGeminiKey = !!process.env.GEMINI_API_KEY;
+      const hasPublicKey = !!process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+
       return NextResponse.json(
-        { error: 'Gemini API service not available. Check API key configuration.' },
+        {
+          error: 'Gemini API service not available. Check API key configuration.',
+          debug: {
+            hasGeminiKey,
+            hasPublicKey,
+            envKeys: Object.keys(process.env).filter(k => k.includes('GEMINI'))
+          }
+        },
         { status: 500 }
       );
     }
@@ -60,11 +71,13 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-
+    // Enhanced error details for debugging
     return NextResponse.json(
       {
         error: 'Failed to generate mockups',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString()
       },
       { status: 500 }
     );

@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export function Header() {
   return (
@@ -22,7 +22,6 @@ export function Header() {
         </div>
         <div className="flex items-center gap-4">
           <Avatar className="h-12 w-12 border-2 border-yellow-600">
-          <AvatarImage src="/placeholder.svg?height=48&width=48" />
           <AvatarFallback className="bg-yellow-600 text-white">
             U
           </AvatarFallback>
