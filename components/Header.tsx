@@ -20,12 +20,14 @@ export function Header() {
             />
           </svg>
         </div>
-        <Avatar className="h-12 w-12 border-2 border-yellow-600">
+        <div className="flex items-center gap-4">
+          <Avatar className="h-12 w-12 border-2 border-yellow-600">
           <AvatarImage src="/placeholder.svg?height=48&width=48" />
           <AvatarFallback className="bg-yellow-600 text-white">
             U
           </AvatarFallback>
         </Avatar>
+        </div>
       </div>
     </header>
   );

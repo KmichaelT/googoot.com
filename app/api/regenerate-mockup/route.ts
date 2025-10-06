@@ -4,12 +4,12 @@ import { createGeminiService } from '@/lib/geminiApi';
 
 export async function POST(request: NextRequest) {
   try {
-    const brandData: BrandData = await request.json();
+    const { mockupId, brandData }: { mockupId: string; brandData: BrandData } = await request.json();
 
     // Validate required fields
-    if (!brandData.name || !brandData.industry) {
+    if (!mockupId || !brandData?.name || !brandData?.industry) {
       return NextResponse.json(
-        { error: 'Missing required brand data' },
+        { error: 'Missing required mockup ID or brand data' },
         { status: 400 }
       );
     }
@@ -18,14 +18,19 @@ export async function POST(request: NextRequest) {
     const enableRealGeneration = process.env.ENABLE_REAL_AI_GENERATION === 'true';
 
     if (!enableRealGeneration) {
-      // Return mock data for testing
+      // Return mock data for testing with different fallback images
+      const fallbackImages = {
+        mockup1: '/Gemini_Generated_Image_720se3720se3720s.png',
+        mockup2: '/Gemini_Generated_Image_993evx993evx993e.png',
+        mockup3: '/Gemini_Generated_Image_4mc24w4mc24w4mc2.png',
+        mockup4: '/Gemini_Generated_Image_to66flto66flto66.png'
+      };
+
       return NextResponse.json({
         success: true,
-        mockups: {
-          mockup1: { success: true, imageUrl: '/Gemini_Generated_Image_720se3720se3720s.png' },
-          mockup2: { success: true, imageUrl: '/Gemini_Generated_Image_993evx993evx993e.png' },
-          mockup3: { success: true, imageUrl: '/Gemini_Generated_Image_4mc24w4mc24w4mc2.png' },
-          mockup4: { success: true, imageUrl: '/Gemini_Generated_Image_to66flto66flto66.png' }
+        mockup: {
+          success: true,
+          imageUrl: fallbackImages[mockupId as keyof typeof fallbackImages] || fallbackImages.mockup1
         }
       });
     }
@@ -40,22 +45,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate all mockups
-    const mockups = await geminiService.generateAllMockups(brandData);
+    // Generate single mockup
+    const mockup = await geminiService.generateMockup({
+      mockupId,
+      brandData
+    });
 
-    // Check if any mockups failed
-    const hasErrors = Object.values(mockups).some(mockup => !mockup.success);
-
-    if (hasErrors) {
+    if (mockup.success) {
+    } else {
     }
 
     return NextResponse.json({
       success: true,
-      mockups,
+      mockup,
       metadata: {
+        mockupId,
         brandName: brandData.name,
-        generatedAt: new Date().toISOString(),
-        hasErrors
+        regeneratedAt: new Date().toISOString()
       }
     });
 
@@ -63,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: 'Failed to generate mockups',
+        error: 'Failed to regenerate mockup',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }

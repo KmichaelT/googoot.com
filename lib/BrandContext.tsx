@@ -9,15 +9,19 @@ interface GeneratedMockup {
   error?: string;
 }
 
+type ViewState = 'form' | 'results';
+
 interface BrandContextType {
   brandData: BrandData | null;
   setBrandData: (data: BrandData) => void;
   isGenerated: boolean;
   setIsGenerated: (generated: boolean) => void;
   generatedMockups: Record<string, GeneratedMockup> | null;
-  setGeneratedMockups: (mockups: Record<string, GeneratedMockup>) => void;
+  setGeneratedMockups: (mockups: Record<string, GeneratedMockup> | ((prev: Record<string, GeneratedMockup> | null) => Record<string, GeneratedMockup>)) => void;
   isGenerating: boolean;
   setIsGenerating: (generating: boolean) => void;
+  currentView: ViewState;
+  setCurrentView: (view: ViewState) => void;
 }
 
 const BrandContext = createContext<BrandContextType | undefined>(undefined);
@@ -27,6 +31,7 @@ export function BrandProvider({ children }: { children: ReactNode }) {
   const [isGenerated, setIsGenerated] = useState(false);
   const [generatedMockups, setGeneratedMockups] = useState<Record<string, GeneratedMockup> | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [currentView, setCurrentView] = useState<ViewState>('form');
 
   return (
     <BrandContext.Provider value={{
@@ -37,7 +42,9 @@ export function BrandProvider({ children }: { children: ReactNode }) {
       generatedMockups,
       setGeneratedMockups,
       isGenerating,
-      setIsGenerating
+      setIsGenerating,
+      currentView,
+      setCurrentView
     }}>
       {children}
     </BrandContext.Provider>

@@ -1,13 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUpload } from "./FileUpload";
-import { ColorInput } from "./ColorInput";
 import { useBrand } from "@/lib/BrandContext";
+import { extractColorsFromBase64Svg, generateColorName, sortColorsByBrightness } from "@/lib/colorExtractor";
+import { Plus, X } from "lucide-react";
+
+export interface BrandColor {
+  hex: string;
+  name: string;
+  isPrimary?: boolean;
+}
 
 export interface BrandData {
   name: string;
@@ -15,23 +22,25 @@ export interface BrandData {
   personality: string;
   description: string;
   tagline?: string;
-  colors: {
-    primary: string;
-    secondary: string;
-    accent: string;
-    dark: string;
-    light: string;
-  };
+  colors: BrandColor[];
   logos: {
-    black: string;
-    white: string;
-    fullColor: string;
-    icon: string;
+    fullColorLogo: string;  // Full color logo SVG
+    flatColorLogo: string;  // Flat color logo SVG
+    fullColorIcon: string;  // Full color icon SVG
+    flatColorIcon: string;  // Flat color icon SVG
+  };
+  processedLogos?: {
+    fullLogoWhiteBg: string;      // Full color logo on white
+    flatLogoWhiteBg: string;       // Black logo on white
+    flatLogoBlackBg: string;       // White logo on black
+    fullIconWhiteBg: string;       // Full color icon on white
+    flatIconWhiteBg: string;       // Black icon on white
+    flatIconBlackBg: string;       // White icon on black
   };
 }
 
 export function BrandForm() {
-  const { setBrandData, setIsGenerated, setGeneratedMockups, isGenerating, setIsGenerating } = useBrand();
+  const { setBrandData, setIsGenerated, setGeneratedMockups, isGenerating, setIsGenerating, setCurrentView } = useBrand();
   const [loading, setLoading] = useState(false);
   
   // Form state
@@ -41,20 +50,68 @@ export function BrandForm() {
   const [description, setDescription] = useState("A cutting-edge AI-powered brand generator that creates stunning mockups and brand guidelines using advanced machine learning technology.");
   const [tagline, setTagline] = useState("AI-Powered Brand Magic");
   
-  // Colors
-  const [primaryColor, setPrimaryColor] = useState("#ff6b35");
-  const [secondaryColor, setSecondaryColor] = useState("#f7931e");
-  const [accentColor, setAccentColor] = useState("#4ecdc4");
-  const [darkColor, setDarkColor] = useState("#2c3e50");
-  const [lightColor, setLightColor] = useState("#ecf0f1");
+  // Dynamic Colors
+  const [colors, setColors] = useState<BrandColor[]>([
+    { hex: "#ff6b35", name: "Color1", isPrimary: true }
+  ]);
   
-  // Logos
+  // Logos - updated to match logo generator interface
   const [logos, setLogos] = useState({
-    black: "",
-    white: "",
-    fullColor: "",
-    icon: ""
+    fullColorLogo: "",
+    flatColorLogo: "",
+    fullColorIcon: "",
+    flatColorIcon: ""
   });
+
+  // Extract colors when full color logo is uploaded
+  useEffect(() => {
+    if (logos.fullColorLogo) {
+      const extractedColors = extractColorsFromBase64Svg(logos.fullColorLogo);
+      if (extractedColors.length > 0) {
+        const sortedColors = sortColorsByBrightness(extractedColors);
+        const newColors: BrandColor[] = sortedColors.map((hex, index) => ({
+          hex,
+          name: generateColorName(index),
+          isPrimary: index === 0
+        }));
+        setColors(newColors);
+      }
+    }
+  }, [logos.fullColorLogo]);
+
+  const addCustomColor = () => {
+    const newColor: BrandColor = {
+      hex: "#000000",
+      name: generateColorName(colors.length),
+      isPrimary: false
+    };
+    setColors([...colors, newColor]);
+  };
+
+  const removeColor = (index: number) => {
+    if (colors.length > 1) {
+      const newColors = colors.filter((_, i) => i !== index);
+      // Ensure we always have a primary color
+      if (!newColors.some(c => c.isPrimary) && newColors.length > 0) {
+        newColors[0].isPrimary = true;
+      }
+      setColors(newColors);
+    }
+  };
+
+  const updateColor = (index: number, updates: Partial<BrandColor>) => {
+    const newColors = [...colors];
+    newColors[index] = { ...newColors[index], ...updates };
+
+    // If setting a new primary, unset the old one
+    if (updates.isPrimary) {
+      newColors.forEach((color, i) => {
+        if (i !== index) color.isPrimary = false;
+      });
+    }
+
+    setColors(newColors);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,15 +123,35 @@ export function BrandForm() {
       personality,
       description,
       tagline,
-      colors: {
-        primary: primaryColor,
-        secondary: secondaryColor,
-        accent: accentColor,
-        dark: darkColor,
-        light: lightColor
-      },
+      colors,
       logos
     };
+
+    // Process logos if available
+    let processedLogos;
+    if (logos.fullColorLogo && logos.fullColorIcon && logos.flatColorLogo && logos.flatColorIcon) {
+      try {
+        const logoProcessingResponse = await fetch('/api/process-logos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fullColorLogo: logos.fullColorLogo,
+            flatColorLogo: logos.flatColorLogo,
+            fullColorIcon: logos.fullColorIcon,
+            flatColorIcon: logos.flatColorIcon
+          })
+        });
+
+        if (logoProcessingResponse.ok) {
+          const logoResult = await logoProcessingResponse.json();
+          if (logoResult.success) {
+            processedLogos = logoResult.logos;
+            brandData.processedLogos = processedLogos;
+          }
+        }
+      } catch {
+      }
+    }
 
     try {
       // Store brand data in context for immediate showcase update
@@ -97,13 +174,13 @@ export function BrandForm() {
 
       if (result.success) {
         setGeneratedMockups(result.mockups);
-        console.log('Mockups generated successfully:', result.mockups);
+        // Switch to results view after successful generation
+        setCurrentView('results');
       } else {
         throw new Error('Mockup generation failed');
       }
 
     } catch (error) {
-      console.error('Error generating mockups:', error);
       alert(`Failed to generate mockups: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
@@ -181,27 +258,31 @@ export function BrandForm() {
           <h2 className="text-2xl font-semibold text-white">Brand Logo</h2>
           
           <FileUpload
-            label="Upload Main Logo"
-            description="The full color version of your logo. Supports PNG, JPG, SVG formats."
-            onFileSelect={(file, base64) => setLogos(prev => ({ ...prev, fullColor: base64 }))}
+            label="Full Color Logo (SVG)"
+            description="Upload your complete logo in full color. Must be SVG format with transparent background."
+            accept=".svg,image/svg+xml"
+            onFileSelect={(file, base64) => setLogos(prev => ({ ...prev, fullColorLogo: base64 }))}
           />
 
           <FileUpload
-            label="Upload Main Logo in White"
-            description="A flat white color on a transparent background. PNG recommended for transparency."
-            onFileSelect={(file, base64) => setLogos(prev => ({ ...prev, white: base64 }))}
+            label="Flat Color Logo (SVG)"
+            description="Upload your logo in a single flat color (any color). Must be SVG format with transparent background."
+            accept=".svg,image/svg+xml"
+            onFileSelect={(file, base64) => setLogos(prev => ({ ...prev, flatColorLogo: base64 }))}
           />
 
           <FileUpload
-            label="Upload Main Logo in Black"
-            description="A flat black color on a transparent background. PNG recommended for transparency."
-            onFileSelect={(file, base64) => setLogos(prev => ({ ...prev, black: base64 }))}
+            label="Full Color Icon (SVG)"
+            description="Upload your icon/mark in full color. Must be SVG format with transparent background."
+            accept=".svg,image/svg+xml"
+            onFileSelect={(file, base64) => setLogos(prev => ({ ...prev, fullColorIcon: base64 }))}
           />
 
           <FileUpload
-            label="Upload Logo Mark (Icon)"
-            description="The icon/mark version of your logo. PNG/JPG recommended for best AI results."
-            onFileSelect={(file, base64) => setLogos(prev => ({ ...prev, icon: base64 }))}
+            label="Flat Color Icon (SVG)"
+            description="Upload your icon in a single flat color (any color). Must be SVG format with transparent background."
+            accept=".svg,image/svg+xml"
+            onFileSelect={(file, base64) => setLogos(prev => ({ ...prev, flatColorIcon: base64 }))}
           />
 
           <div className="space-y-2">
@@ -221,42 +302,78 @@ export function BrandForm() {
       {/* Brand Colors */}
       <div className="flex flex-col gap-10 rounded-lg border border-white/30 p-8">
         <div className="space-y-6">
-          <h2 className="text-2xl font-semibold text-white">Brand Colors</h2>
-          
-          <ColorInput
-            label="Primary Color"
-            description="Pick and name a primary color."
-            value={primaryColor}
-            onChange={setPrimaryColor}
-          />
-          
-          <ColorInput
-            label="Secondary Color"
-            description="Pick and name a secondary color."
-            value={secondaryColor}
-            onChange={setSecondaryColor}
-          />
-          
-          <ColorInput
-            label="Accent Color"
-            description="Pick and name an accent color."
-            value={accentColor}
-            onChange={setAccentColor}
-          />
-          
-          <ColorInput
-            label="Dark Color (optional)"
-            description="Pick and name a dark color if other than black."
-            value={darkColor}
-            onChange={setDarkColor}
-          />
-          
-          <ColorInput
-            label="Light Color (optional)"
-            description="Pick and name a light color if other than white."
-            value={lightColor}
-            onChange={setLightColor}
-          />
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-semibold text-white">Brand Colors</h2>
+            <Button
+              type="button"
+              onClick={addCustomColor}
+              size="sm"
+              variant="outline"
+              className="border-white/30 bg-transparent text-white hover:bg-white/10"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Color
+            </Button>
+          </div>
+
+          {colors.map((color, index) => (
+            <div key={index} className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm text-white/80">
+                  {color.name}
+                  {color.isPrimary && (
+                    <span className="ml-2 text-xs bg-white/20 px-2 py-1 rounded">Primary</span>
+                  )}
+                </Label>
+                {colors.length > 1 && (
+                  <Button
+                    type="button"
+                    onClick={() => removeColor(index)}
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 w-6 p-0 text-white/60 hover:text-white hover:bg-white/10"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Input
+                    value={color.name}
+                    onChange={(e) => updateColor(index, { name: e.target.value })}
+                    placeholder="Color name"
+                    className="border-0 bg-[#5A5A5A] text-white placeholder:text-white/40"
+                  />
+                </div>
+                <div className="w-20">
+                  <input
+                    type="color"
+                    value={color.hex}
+                    onChange={(e) => updateColor(index, { hex: e.target.value.toUpperCase() })}
+                    className="w-full h-10 rounded border-0 bg-transparent cursor-pointer"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => updateColor(index, { isPrimary: !color.isPrimary })}
+                  size="sm"
+                  variant={color.isPrimary ? "default" : "outline"}
+                  className={color.isPrimary
+                    ? "bg-white text-black hover:bg-white/90"
+                    : "border-white/30 bg-transparent text-white hover:bg-white/10"
+                  }
+                >
+                  {color.isPrimary ? "Primary" : "Set Primary"}
+                </Button>
+              </div>
+            </div>
+          ))}
+
+          <div className="text-sm text-white/60">
+            Colors are automatically extracted from your full color logo. You can modify names and add custom colors.
+          </div>
         </div>
       </div>
 

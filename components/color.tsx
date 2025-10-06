@@ -1,42 +1,31 @@
+import { BrandColor } from "./BrandForm";
+
 interface ColorPaletteProps {
-  colors: {
-    hex: string
-    width?: number // percentage width, defaults to equal distribution
-  }[]
+  colors: BrandColor[]
 }
 
 export function ColorPalette({ colors }: ColorPaletteProps) {
-  // Calculate default width if not specified
-  const totalSpecifiedWidth = colors.reduce((sum, color) => sum + (color.width || 0), 0)
-  const unspecifiedCount = colors.filter((color) => !color.width).length
-  const defaultWidth = unspecifiedCount > 0 ? (100 - totalSpecifiedWidth) / unspecifiedCount : 0
+  if (!colors || colors.length === 0) return null;
+
+  // Calculate equal width distribution for all colors
+  const equalWidth = 100 / colors.length;
 
   return (
-    <div className="flex h-full overflow-hidden   shadow-lg">
+    <div className="flex h-full overflow-hidden shadow-lg">
       {colors.map((color, index) => {
-        const width = color.width || defaultWidth
-        // Determine text color based on background brightness
-        const hex = color.hex.replace("#", "")
-        const r = Number.parseInt(hex.substring(0, 2), 16)
-        const g = Number.parseInt(hex.substring(2, 4), 16)
-        const b = Number.parseInt(hex.substring(4, 6), 16)
-        const brightness = (r * 299 + g * 587 + b * 114) / 1000
-        const textColor = brightness > 128 ? "#000000" : "#ffffff"
-
         return (
           <div
             key={index}
-            className="flex items-end justify-start p-8"
+            className="flex items-center justify-center"
             style={{
               backgroundColor: color.hex,
-              width: `${width}%`,
-              color: textColor,
+              width: `${equalWidth}%`,
             }}
           >
-            <span className="text-md font-medium">{color.hex}</span>
+            {/* No labels - clean color display only */}
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

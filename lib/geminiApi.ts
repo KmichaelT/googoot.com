@@ -1,5 +1,6 @@
 import { BrandData } from "@/components/BrandForm";
 import { generateMockupPrompt, getLogoForMockup, MOCKUP_TYPES } from "./mockupUtils";
+import { convertSvgToPng, isSvgBase64 } from "./svgConverter";
 
 export interface MockupGenerationRequest {
   mockupId: string;
@@ -33,6 +34,7 @@ export class GeminiService {
     return 'image/png';
   }
 
+
   async generateMockup(request: MockupGenerationRequest): Promise<MockupGenerationResponse> {
     try {
       const prompt = generateMockupPrompt(request.mockupId, request.brandData);
@@ -40,25 +42,37 @@ export class GeminiService {
 
       // Always require a logo for proper mockup generation
       if (!logoFile || logoFile.length <= 50) {
-        console.log(`Skipping mockup ${request.mockupId} - no valid logo file available`);
         return {
           success: false,
           error: 'No valid logo file available for this mockup type'
         };
       }
 
+      // Convert SVG to PNG if needed
+      let processedLogoFile = logoFile;
+
+      if (isSvgBase64(logoFile)) {
+        try {
+          processedLogoFile = await convertSvgToPng(logoFile, 1024, 1024);
+        } catch (error) {
+          return {
+            success: false,
+            error: `Failed to convert SVG logo: ${error instanceof Error ? error.message : 'Unknown error'}`
+          };
+        }
+      }
+
       // Build the request parts - always include both prompt and logo
-      const parts: any[] = [
+      const parts = [
         { text: prompt },
         {
           inline_data: {
-            mime_type: this.getMimeType(logoFile),
-            data: logoFile.split(',')[1] // Remove data:image/... prefix
+            mime_type: this.getMimeType(processedLogoFile),
+            data: processedLogoFile.split(',')[1] // Remove data:image/... prefix
           }
         }
       ];
 
-      console.log(`Generating mockup ${request.mockupId} with logo (${this.getMimeType(logoFile)})`);
 
       const response = await fetch(`${this.baseUrl}/models/${this.model}:generateContent?key=${this.apiKey}`, {
         method: 'POST',
@@ -78,14 +92,12 @@ export class GeminiService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Gemini API Error Response:', errorText);
         throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const data = await response.json();
 
       // Log the response for debugging
-      console.log(`Gemini API Response for ${request.mockupId}:`, JSON.stringify(data, null, 2).substring(0, 500) + '...');
 
       // Extract the generated image from the response
       // The image can be in either format: inline_data (base64) or text
@@ -95,8 +107,8 @@ export class GeminiService {
       }
 
       // Check for image data in the response (Gemini uses camelCase: inlineData not inline_data)
-      const imagePart = candidate.content?.parts?.find((part: any) => part.inlineData?.data);
-      const textPart = candidate.content?.parts?.find((part: any) => part.text);
+      const imagePart = candidate.content?.parts?.find((part: { inlineData?: { data?: string } }) => part.inlineData?.data);
+      const textPart = candidate.content?.parts?.find((part: { text?: string }) => part.text);
 
       if (imagePart?.inlineData?.data) {
         // We have an actual generated image!
@@ -105,19 +117,16 @@ export class GeminiService {
 
         return {
           success: true,
-          imageUrl,
-          description: textPart?.text || 'Generated mockup'
+          imageUrl
         };
       } else if (textPart?.text) {
         // Only text response, no image generated
-        console.log('Text-only response:', textPart.text);
         throw new Error('No image data in response');
       } else {
         throw new Error('No valid response from API');
       }
 
     } catch (error) {
-      console.error('Mockup generation error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -133,7 +142,6 @@ export class GeminiService {
       const logoFile = getLogoForMockup(mockup.id, brandData);
 
       // Log which logo type is being used for each mockup
-      console.log(`Mockup ${mockup.id} (${mockup.name}) requires ${mockup.logoType} logo:`, logoFile ? 'available' : 'missing');
 
       const result = await this.generateMockup({
         mockupId: mockup.id,
@@ -158,7 +166,6 @@ export function createGeminiService(): GeminiService | null {
   const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
-    console.warn('Gemini API key not found. Set NEXT_PUBLIC_GEMINI_API_KEY or GEMINI_API_KEY environment variable.');
     return null;
   }
 
