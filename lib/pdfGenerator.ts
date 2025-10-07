@@ -61,33 +61,96 @@ export async function generatePDF(
       width: element.scrollWidth * quality,
       height: element.scrollHeight * quality,
       onclone: (clonedDoc: Document) => {
-        // Fix OKLCH color functions that html2canvas can't parse
-        const style = clonedDoc.createElement('style');
-        style.textContent = `
-          * {
-            color: rgb(255, 255, 255) !important;
-            background-color: transparent !important;
+        // Completely override all styles to avoid OKLCH and modern CSS
+        const allElements = clonedDoc.querySelectorAll('*');
+
+        // Remove all existing stylesheets
+        const stylesheets = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
+        stylesheets.forEach(sheet => sheet.remove());
+
+        // Apply safe styles directly to elements
+        allElements.forEach((element: Element) => {
+          const htmlElement = element as HTMLElement;
+
+          // Reset all computed styles to safe values
+          htmlElement.style.cssText = '';
+
+          // Apply basic styles based on classes
+          const classList = Array.from(htmlElement.classList);
+
+          // Background colors
+          if (classList.some(cls => cls.includes('bg-black'))) {
+            htmlElement.style.backgroundColor = 'rgb(0, 0, 0)';
+          } else if (classList.some(cls => cls.includes('bg-white'))) {
+            htmlElement.style.backgroundColor = 'rgb(255, 255, 255)';
+          } else if (classList.some(cls => cls.includes('bg-') && (cls.includes('gray') || cls.includes('[')))) {
+            htmlElement.style.backgroundColor = 'rgb(107, 107, 107)';
           }
-          [class*="bg-black"] {
-            background-color: rgb(0, 0, 0) !important;
+
+          // Text colors
+          if (classList.some(cls => cls.includes('text-white'))) {
+            htmlElement.style.color = 'rgb(255, 255, 255)';
+          } else if (classList.some(cls => cls.includes('text-black'))) {
+            htmlElement.style.color = 'rgb(0, 0, 0)';
+          } else {
+            htmlElement.style.color = 'rgb(255, 255, 255)';
           }
-          [class*="bg-white"] {
-            background-color: rgb(255, 255, 255) !important;
+
+          // Borders
+          if (classList.some(cls => cls.includes('border'))) {
+            if (classList.some(cls => cls.includes('border-white'))) {
+              htmlElement.style.borderColor = 'rgb(255, 255, 255)';
+            }
+            if (classList.some(cls => cls.includes('border-0'))) {
+              htmlElement.style.border = 'none';
+            } else {
+              htmlElement.style.borderWidth = '1px';
+              htmlElement.style.borderStyle = 'solid';
+            }
           }
-          [class*="bg-gray"], [class*="bg-\\["] {
-            background-color: rgb(107, 107, 107) !important;
+
+          // Layout and positioning
+          if (classList.some(cls => cls.includes('grid'))) {
+            htmlElement.style.display = 'grid';
           }
-          [class*="text-white"] {
-            color: rgb(255, 255, 255) !important;
+          if (classList.some(cls => cls.includes('flex'))) {
+            htmlElement.style.display = 'flex';
           }
-          [class*="text-black"] {
-            color: rgb(0, 0, 0) !important;
+          if (classList.some(cls => cls.includes('relative'))) {
+            htmlElement.style.position = 'relative';
           }
-          [class*="border-white"] {
-            border-color: rgb(255, 255, 255) !important;
+          if (classList.some(cls => cls.includes('absolute'))) {
+            htmlElement.style.position = 'absolute';
           }
-        `;
-        clonedDoc.head.appendChild(style);
+
+          // Spacing
+          if (classList.some(cls => cls.includes('p-'))) {
+            const paddingClass = classList.find(cls => cls.startsWith('p-'));
+            if (paddingClass === 'p-12') htmlElement.style.padding = '3rem';
+            if (paddingClass === 'p-20') htmlElement.style.padding = '5rem';
+          }
+
+          // Sizing
+          if (classList.some(cls => cls.includes('w-full'))) {
+            htmlElement.style.width = '100%';
+          }
+          if (classList.some(cls => cls.includes('h-full'))) {
+            htmlElement.style.height = '100%';
+          }
+
+          // Object fit
+          if (classList.some(cls => cls.includes('object-contain'))) {
+            htmlElement.style.objectFit = 'contain';
+          }
+          if (classList.some(cls => cls.includes('object-cover'))) {
+            htmlElement.style.objectFit = 'cover';
+          }
+
+          // Rounded corners
+          if (classList.some(cls => cls.includes('rounded'))) {
+            htmlElement.style.borderRadius = '0.5rem';
+          }
+        });
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
