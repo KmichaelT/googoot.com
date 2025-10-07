@@ -1,4 +1,11 @@
-import sharp from 'sharp';
+// Dynamic import for Sharp to work in serverless environment
+let sharp: typeof import('sharp') | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  sharp = require('sharp');
+} catch {
+  // Sharp not available in this environment
+}
 
 export interface LogoInput {
   fullColorLogo: string;  // Base64 SVG
@@ -154,6 +161,10 @@ function changeSvgFillColor(svgString: string, newColor: string): string {
  * Convert SVG to PNG using Sharp
  */
 async function svgToPng(svgString: string, size: number = 2048, dpi: number = 300): Promise<Buffer> {
+  if (!sharp) {
+    throw new Error('Sharp is not available in this environment');
+  }
+
   try {
     const buffer = Buffer.from(svgString);
 
