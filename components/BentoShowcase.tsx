@@ -98,6 +98,7 @@ export function BentoShowcase() {
           <Card className="relative col-span-1 h-60 overflow-hidden rounded-lg md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-4 bg-white border-0">
             {brandData?.logos.fullColorLogo ? (
               // Always use full color logo for main display
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={brandData.logos.fullColorLogo}
                 alt="Main logo display"
@@ -147,6 +148,7 @@ export function BentoShowcase() {
           {/* Icon on black background */}
           <div className="relative col-span-1 h-60 overflow-hidden rounded-lg md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2 bg-black">
             {brandData?.logos.fullColorIcon ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={createColorVariantSvg(brandData.logos.fullColorIcon, '#ffffff')}
                 alt="White icon on black background"
@@ -166,6 +168,7 @@ export function BentoShowcase() {
           {/* Icon on white background */}
           <div className="relative col-span-1 h-60 overflow-hidden rounded-lg border md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2 bg-white">
             {brandData?.logos.fullColorIcon ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={createColorVariantSvg(brandData.logos.fullColorIcon, '#000000')}
                 alt="Black icon on white background"
