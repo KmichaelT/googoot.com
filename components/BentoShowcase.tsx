@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { ColorPalette } from "@/components/color";
 import { useBrand } from "@/lib/BrandContext";
 import { createColorVariantSvg } from "@/lib/logoProcessorClient";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Download } from "lucide-react";
 import { useState } from "react";
+import { downloadBentoGridPDF } from "@/lib/pdfGenerator";
 
 export function BentoShowcase() {
   const { brandData, generatedMockups, isGenerating, setGeneratedMockups, setCurrentView } = useBrand();
@@ -50,19 +51,29 @@ export function BentoShowcase() {
   return (
     <section className="py-32">
       <div className="container mx-auto">
-        {/* Header with Edit Brand button */}
+        {/* Header with Edit Brand and Download PDF buttons */}
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold text-white">Brand Showcase</h2>
-          <Button
-            onClick={() => setCurrentView('form')}
-            size="lg"
-            variant="outline"
-            className="border-white/30 bg-transparent text-white hover:bg-white/10 px-8"
-          >
-            Edit Brand
-          </Button>
+          <div className="flex gap-4">
+            <Button
+              onClick={() => downloadBentoGridPDF(brandData?.name)}
+              size="lg"
+              className="bg-white text-[#6B6B6B] hover:bg-white/90 px-6"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download PDF
+            </Button>
+            <Button
+              onClick={() => setCurrentView('form')}
+              size="lg"
+              variant="outline"
+              className="border-white/30 bg-transparent text-white hover:bg-white/10 px-8"
+            >
+              Edit Brand
+            </Button>
+          </div>
         </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-6 lg:grid-cols-12">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-6 lg:grid-cols-12" data-bento-grid>
           {/* Mockup1 */}
           <div className="relative h-60 overflow-hidden rounded-lg md:col-span-2 md:row-span-2 md:h-[300px] lg:col-span-4 lg:h-full group">
             {(isGenerating || refreshingMockups['mockup1']) && (
