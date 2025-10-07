@@ -44,15 +44,15 @@ export function BrandForm() {
   const [loading, setLoading] = useState(false);
   
   // Form state
-  const [brandName, setBrandName] = useState("NanoBanana");
-  const [industry, setIndustry] = useState("Technology");
-  const [personality, setPersonality] = useState("Modern, Innovative, Friendly");
-  const [description, setDescription] = useState("A cutting-edge AI-powered brand generator that creates stunning mockups and brand guidelines using advanced machine learning technology.");
-  const [tagline, setTagline] = useState("AI-Powered Brand Magic");
-  
+  const [brandName, setBrandName] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [personality, setPersonality] = useState("");
+  const [description, setDescription] = useState("");
+  const [tagline, setTagline] = useState("");
+
   // Dynamic Colors
   const [colors, setColors] = useState<BrandColor[]>([
-    { hex: "#ff6b35", name: "Color1", isPrimary: true }
+    { hex: "#000000", name: "Primary Color", isPrimary: true }
   ]);
   
   // Logos - updated to match logo generator interface
