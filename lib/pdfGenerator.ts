@@ -59,7 +59,36 @@ export async function generatePDF(
       useCORS: true,
       allowTaint: true,
       width: element.scrollWidth * quality,
-      height: element.scrollHeight * quality
+      height: element.scrollHeight * quality,
+      onclone: (clonedDoc: Document) => {
+        // Fix OKLCH color functions that html2canvas can't parse
+        const style = clonedDoc.createElement('style');
+        style.textContent = `
+          * {
+            color: rgb(255, 255, 255) !important;
+            background-color: transparent !important;
+          }
+          [class*="bg-black"] {
+            background-color: rgb(0, 0, 0) !important;
+          }
+          [class*="bg-white"] {
+            background-color: rgb(255, 255, 255) !important;
+          }
+          [class*="bg-gray"], [class*="bg-\\["] {
+            background-color: rgb(107, 107, 107) !important;
+          }
+          [class*="text-white"] {
+            color: rgb(255, 255, 255) !important;
+          }
+          [class*="text-black"] {
+            color: rgb(0, 0, 0) !important;
+          }
+          [class*="border-white"] {
+            border-color: rgb(255, 255, 255) !important;
+          }
+        `;
+        clonedDoc.head.appendChild(style);
+      }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
@@ -118,16 +147,18 @@ export async function generatePDF(
     // Save the PDF
     pdf.save(filename);
 
-    // Remove loading div
-    document.body.removeChild(loadingDiv);
+    // Remove loading div safely
+    if (loadingDiv && loadingDiv.parentNode) {
+      loadingDiv.parentNode.removeChild(loadingDiv);
+    }
 
   } catch (error) {
     console.error('Error generating PDF:', error);
 
     // Remove loading div if it exists
-    const loadingDiv = document.querySelector('[style*="position: fixed"]');
-    if (loadingDiv) {
-      document.body.removeChild(loadingDiv);
+    const existingLoadingDiv = document.querySelector('[style*="position: fixed"]') as HTMLElement;
+    if (existingLoadingDiv && existingLoadingDiv.parentNode) {
+      existingLoadingDiv.parentNode.removeChild(existingLoadingDiv);
     }
 
     // Show error message
