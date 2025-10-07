@@ -7,34 +7,39 @@
  * Change all fill colors in SVG to a specific color (client-side)
  */
 export function changeSvgFillColorClient(svgString: string, newColor: string): string {
-  // Create a temporary div to manipulate the SVG
-  const div = document.createElement('div');
-  div.innerHTML = svgString;
+  let modifiedSvg = svgString;
 
-  // Find all elements with fill attribute
-  const elements = div.querySelectorAll('[fill]');
-  elements.forEach(element => {
-    const currentFill = element.getAttribute('fill');
-    if (currentFill && currentFill !== 'none' && currentFill !== 'transparent') {
-      element.setAttribute('fill', newColor);
-    }
+  // Remove all gradient definitions and replace them with solid color
+  modifiedSvg = modifiedSvg.replace(/<defs>[\s\S]*?<\/defs>/g, '');
+  modifiedSvg = modifiedSvg.replace(/<linearGradient[\s\S]*?<\/linearGradient>/g, '');
+  modifiedSvg = modifiedSvg.replace(/<radialGradient[\s\S]*?<\/radialGradient>/g, '');
+
+  // Replace all fill attributes (including gradient references)
+  modifiedSvg = modifiedSvg.replace(
+    /fill="(?!none|transparent)([^"]*)"/g,
+    `fill="${newColor}"`
+  );
+
+  // Replace fill in style attributes
+  modifiedSvg = modifiedSvg.replace(
+    /fill:\s*[^;}"]+/g,
+    `fill: ${newColor}`
+  );
+
+  // Replace any CSS classes that might have fill
+  modifiedSvg = modifiedSvg.replace(
+    /\.([\w-]+)\s*\{\s*fill:[^}]+\}/g,
+    `.$1 { fill: ${newColor}; }`
+  );
+
+  // Add fill to elements that don't have it
+  const fillableElements = ['path', 'circle', 'rect', 'ellipse', 'polygon', 'polyline'];
+  fillableElements.forEach(tag => {
+    const regex = new RegExp(`<${tag}([^>]*?)(?!.*fill=)([^>]*?)>`, 'gi');
+    modifiedSvg = modifiedSvg.replace(regex, `<${tag}$1 fill="${newColor}"$2>`);
   });
 
-  // Find all style attributes containing fill
-  const styledElements = div.querySelectorAll('[style*="fill"]');
-  styledElements.forEach(element => {
-    const style = element.getAttribute('style') || '';
-    const newStyle = style.replace(/fill:\s*[^;}"]+/g, `fill: ${newColor}`);
-    element.setAttribute('style', newStyle);
-  });
-
-  // Add fill to paths without fill attribute
-  const paths = div.querySelectorAll('path:not([fill]), circle:not([fill]), rect:not([fill]), ellipse:not([fill]), polygon:not([fill])');
-  paths.forEach(element => {
-    element.setAttribute('fill', newColor);
-  });
-
-  return div.innerHTML;
+  return modifiedSvg;
 }
 
 /**
