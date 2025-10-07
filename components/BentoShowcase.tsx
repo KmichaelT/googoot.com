@@ -8,7 +8,7 @@ import { useBrand } from "@/lib/BrandContext";
 import { createColorVariantSvg } from "@/lib/logoProcessorClient";
 import { RefreshCw, Download } from "lucide-react";
 import { useState } from "react";
-import { downloadBentoGridPDF } from "@/lib/pdfGenerator";
+import { downloadBentoGridScreenshot } from "@/lib/screenshotDownload";
 
 export function BentoShowcase() {
   const { brandData, generatedMockups, isGenerating, setGeneratedMockups, setCurrentView } = useBrand();
@@ -56,12 +56,12 @@ export function BentoShowcase() {
           <h2 className="text-3xl font-bold text-white">Brand Showcase</h2>
           <div className="flex gap-4">
             <Button
-              onClick={() => downloadBentoGridPDF(brandData?.name)}
+              onClick={() => downloadBentoGridScreenshot(brandData?.name)}
               size="lg"
               className="bg-white text-[#6B6B6B] hover:bg-white/90 px-6"
             >
               <Download className="w-4 h-4 mr-2" />
-              Download PDF
+              Download PNG
             </Button>
             <Button
               onClick={() => setCurrentView('form')}
