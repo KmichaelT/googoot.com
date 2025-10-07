@@ -1,4 +1,4 @@
-import html2canvas from 'html2canvas';
+import { toPng, toJpeg } from 'html-to-image';
 
 interface ScreenshotOptions {
   filename?: string;
@@ -7,7 +7,7 @@ interface ScreenshotOptions {
 }
 
 /**
- * Take a screenshot of an element and download it
+ * Take a screenshot of an element and download it using html-to-image
  */
 export async function downloadElementScreenshot(
   element: HTMLElement,
@@ -54,28 +54,37 @@ export async function downloadElementScreenshot(
     // Wait a moment for any animations to settle
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Capture the element with high quality
-    const canvas = await html2canvas(element, {
-      useCORS: true,
-      allowTaint: true,
-      logging: false,
-      width: element.offsetWidth * quality,
-      height: element.offsetHeight * quality
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any);
-
-    // Convert to blob
-    const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
-    const blob = await new Promise<Blob>((resolve) => {
-      canvas.toBlob((blob) => {
-        resolve(blob!);
-      }, mimeType, format === 'jpeg' ? 0.9 : undefined);
-    });
+    // Capture the element with html-to-image and 80px margin
+    const margin = 80;
+    const dataUrl = format === 'png'
+      ? await toPng(element, {
+          cacheBust: true,
+          pixelRatio: quality,
+          backgroundColor: '#6B6B6B',
+          quality: 0.95,
+          width: element.scrollWidth + (margin * 2),
+          height: element.scrollHeight + (margin * 2),
+          style: {
+            padding: `${margin}px`,
+            boxSizing: 'border-box'
+          }
+        })
+      : await toJpeg(element, {
+          cacheBust: true,
+          pixelRatio: quality,
+          backgroundColor: '#6B6B6B',
+          quality: 0.9,
+          width: element.scrollWidth + (margin * 2),
+          height: element.scrollHeight + (margin * 2),
+          style: {
+            padding: `${margin}px`,
+            boxSizing: 'border-box'
+          }
+        });
 
     // Create download link
-    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = url;
+    link.href = dataUrl;
     link.download = filename;
 
     // Trigger download
@@ -84,7 +93,6 @@ export async function downloadElementScreenshot(
 
     // Cleanup
     document.body.removeChild(link);
-    URL.revokeObjectURL(url);
 
     // Remove loading div
     if (loadingDiv && loadingDiv.parentNode) {
